@@ -1,2 +1,6 @@
 *.pyc
+Pipfile.lock
+build/
 certs/
+dist/
+*.egg-info/
