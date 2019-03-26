@@ -1,4 +1,5 @@
 from multiprocessing import Process
+import os
 
 import boto3
 from moto import server
@@ -12,7 +13,7 @@ from moto_interceptor.utils import get_available_port
 
 class Controller(object):
 
-    def __init__(self, intercept_method=None, moto_processes=[],
+    def __init__(self, cert_path=None, intercept_method=None, moto_processes=[],
                  proxy_process=None, proxy_map={}, ssl_context=None,
                  target_regions=None, target_services=None):
         self.proxy_process = proxy_process
@@ -20,10 +21,22 @@ class Controller(object):
         self.moto_processes = moto_processes
         self.ssl_context = ssl_context
 
+        if cert_path is None:
+            self.cert_path = os.getcwd()
+        else:
+            self.cert_path = os.path.join(os.getcwd(), cert_path)
+
         if intercept_method is None or intercept_method not in ['dnsmasq', 'hostfile']:
             self.intercept_method = 'hostfile'
         else:
             self.intercept_method = intercept_method
+
+        if ssl_context is None:
+            ssl_cert = os.path.join(self.cert_path, 'localhost.crt')
+            ssl_key = os.path.join(self.cert_path, 'localhost.key')
+            self.ssl_context = (ssl_cert, ssl_key)
+        else:
+            self.ssl_context = ssl_context
 
         if target_regions is None:
             self.target_regions = boto3.Session().get_available_regions('ec2')
@@ -96,7 +109,7 @@ class Controller(object):
             raise KeyError(
                 'Unknown intercept type: {}'.format(self.intercept_method))
 
-        create_certs('localhost', sans=certificate_sans)
+        create_certs(self.cert_path, domain='localhost', sans=certificate_sans)
 
     def start_moto(self):
         for service in self.target_services:

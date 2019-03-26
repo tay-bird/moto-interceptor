@@ -37,8 +37,7 @@ class Resolver(FileLineManager):
     file_path = '/etc/resolver/amazonaws.com'
 
     def __init__(self):
-        if not os.path.exists('/etc/resolver'):
-            os.makedirs('/etc/resolver')
+        os.makedirs('/etc/resolver', exist_ok=True)
 
         super().__init__()
 

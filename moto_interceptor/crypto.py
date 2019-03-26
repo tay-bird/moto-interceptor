@@ -1,4 +1,5 @@
 import datetime
+import os
 
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
@@ -8,7 +9,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import NameOID
 
 
-def create_certs(domain, sans=[]):
+def create_certs(cert_path, domain='localhost', sans=[]):
     subject = issuer = x509.Name([
         x509.NameAttribute(NameOID.COUNTRY_NAME, u"US"),
         x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, u"California"),
@@ -57,27 +58,29 @@ def create_certs(domain, sans=[]):
         critical=False
     ).sign(ca_key, hashes.SHA256(), default_backend())
 
-    with open('certs/rootCA.crt', 'wb+') as f:
+    os.makedirs(cert_path, exist_ok=True)
+
+    with open(os.path.join(cert_path, 'rootCA.crt'), 'wb+') as f:
         f.write(ca_cert.public_bytes(serialization.Encoding.PEM))
 
-    with open('certs/rootCA.key', 'wb+') as f:
+    with open(os.path.join(cert_path, 'rootCA.key'), 'wb+') as f:
         f.write(ca_key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.TraditionalOpenSSL,
             encryption_algorithm=serialization.NoEncryption()
         ))
 
-    with open('certs/localhost.crt', 'wb+') as f:
+    with open(os.path.join(cert_path, 'localhost.crt'), 'wb+') as f:
         f.write(local_cert.public_bytes(serialization.Encoding.PEM))
 
-    with open('certs/localhost.key', 'wb+') as f:
+    with open(os.path.join(cert_path, 'localhost.key'), 'wb+') as f:
         f.write(local_key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.TraditionalOpenSSL,
             encryption_algorithm=serialization.NoEncryption()
         ))
 
-    with open('certs/bundle', 'wb+') as f:
+    with open(os.path.join(cert_path, 'bundle'), 'wb+') as f:
         f.write(local_cert.public_bytes(serialization.Encoding.PEM))
         f.write('\n'.encode('utf-8'))
         f.write(ca_cert.public_bytes(serialization.Encoding.PEM))

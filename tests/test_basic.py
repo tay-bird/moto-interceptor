@@ -12,7 +12,7 @@ class TestServerBasic(unittest.TestCase):
             'aws_access_key_id': 'fake',
             'aws_secret_access_key': 'fake'}
 
-        os.environ['AWS_CA_BUNDLE'] = os.getcwd() + '/certs/bundle'
+        os.environ['AWS_CA_BUNDLE'] = os.getcwd() + '/bundle'
 
     def test_basic_ec2(self):
         client = boto3.client('ec2', **self.boto_kwargs)
