@@ -10,3 +10,6 @@ cryptography = "*"
 
 [requires]
 python_version = "3.6"
+
+[dev-packages]
+wheel = "*"
