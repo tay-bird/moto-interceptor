@@ -1,5 +1,4 @@
 from multiprocessing import Process
-import subprocess
 
 import boto3
 from moto import server

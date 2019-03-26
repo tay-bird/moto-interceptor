@@ -9,7 +9,6 @@ def main():
     parser.add_argument('--intercept_method', choices=['dnsmasq', 'hostfile'])
     
     kwargs = vars(parser.parse_args())
-    print(kwargs)
 
     controller = Controller(
         ssl_context=('certs/localhost.crt', 'certs/localhost.key'),

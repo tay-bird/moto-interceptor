@@ -84,4 +84,4 @@ def create_certs(domain, sans=[]):
 
 
 if __name__ == '__main__':
-    create_certs(u'localhost', [u"*.s3.us-west-2.amazonaws.com", u"s3.us-west-2.amazonaws.com", u"ec2.us-west-2.amazonaws.com"])
+    create_certs(u'localhost', [u"*.s3.us-west-2.amazonaws.com"])
