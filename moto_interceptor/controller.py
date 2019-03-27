@@ -14,12 +14,12 @@ from moto_interceptor.utils import get_available_port
 class Controller(object):
 
     def __init__(self, cert_path=None, intercept_method=None, moto_processes=[],
-                 proxy_process=None, proxy_map={}, ssl_context=None,
-                 target_regions=None, target_services=None):
+                 multiplex=False, proxy_process=None, proxy_map={},
+                 ssl_context=None, target_regions=[], target_services=[]):
         self.proxy_process = proxy_process
         self.proxy_map = proxy_map
         self.moto_processes = moto_processes
-        self.ssl_context = ssl_context
+        self.multiplex = multiplex
 
         if cert_path is None:
             self.cert_path = os.getcwd()
@@ -38,15 +38,16 @@ class Controller(object):
         else:
             self.ssl_context = ssl_context
 
-        if target_regions is None:
-            self.target_regions = boto3.Session().get_available_regions('ec2')
-        else:
+        if target_regions:
             self.target_regions = target_regions
-
-        if target_services is None:
-            self.target_services = boto3.Session().get_available_services()
         else:
+            self.target_regions = boto3.Session().get_available_regions('ec2')
+
+        if target_services:
             self.target_services = target_services
+        else:
+            self.target_services = boto3.Session().get_available_services()
+        print(self.target_services)
 
     def start_all(self):
         self.start_interceptors()
@@ -65,22 +66,26 @@ class Controller(object):
             self.stop_proxy()
 
     def start_interceptors(self):
+        region_hosts = [region + '.amazonaws.com' for region in self.target_regions]
+        
         short_hosts = [
             service + '.amazonaws.com'
             for service in self.target_services]
 
         long_hosts = [
-            service + '.' + region + '.amazonaws.com'
-            for service in self.target_services
-            for region in self.target_regions]
+            service + '.' + region_host
+            for region_host in region_hosts
+            for service in self.target_services]
 
-        short_and_long_hosts = short_hosts + long_hosts
+        region_sans = [
+            '*.' + region_host
+            for region_host in region_hosts]
 
-        wildcard_hosts = [
+        service_sans = [
             '*.' + host
-            for host in short_and_long_hosts]
+            for host in short_hosts + long_hosts]
 
-        certificate_sans = short_and_long_hosts + wildcard_hosts
+        certificate_sans = ['*.amazonaws.com'] + region_sans + service_sans
 
         if self.intercept_method == 'dnsmasq':
             dnsmasq_entry = 'address=/.amazonaws.com/127.0.0.1'
@@ -99,7 +104,7 @@ class Controller(object):
         elif self.intercept_method == 'hostfile':
             host_entries = [
                 '127.0.0.1 ' + host + '\n'
-                for host in short_and_long_hosts]
+                for host in short_hosts + long_hosts]
 
             host_interceptor = Hostfile()
             host_interceptor.add_entries(host_entries)
@@ -112,19 +117,37 @@ class Controller(object):
         create_certs(self.cert_path, domain='localhost', sans=certificate_sans)
 
     def start_moto(self):
-        for service in self.target_services:
+        if self.multiplex is True:
+            for service in self.target_services:
+                moto_server = server.DomainDispatcherApplication(
+                    server.create_backend_app, service=service)
+
+                port = get_available_port()
+                self.proxy_map[service] = port
+
+                moto_process = Process(
+                    target=run_simple,
+                    args=('localhost', port, moto_server),
+                    kwargs={'threaded': True})
+                self.moto_processes.append(moto_process)
+                
+                moto_process.start()
+        
+        else:
             moto_server = server.DomainDispatcherApplication(
-                server.create_backend_app, service=service)
+                server.create_backend_app)
 
             port = get_available_port()
-            self.proxy_map[service] = port
-
+            
+            for service in self.target_services:
+                self.proxy_map[service] = port
+            
             moto_process = Process(
                 target=run_simple,
                 args=('localhost', port, moto_server),
                 kwargs={'threaded': True})
             self.moto_processes.append(moto_process)
-            
+
             moto_process.start()
 
     def start_proxy(self):
