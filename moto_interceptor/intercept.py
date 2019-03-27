@@ -44,3 +44,7 @@ class Resolver(FileLineManager):
     def add_entries(self, entries):
         super().add_entries(entries)
         os.utime('/etc/resolver')
+
+    def remove_entries(self):
+        super().remove_entries()
+        os.utime('/etc/resolver')
