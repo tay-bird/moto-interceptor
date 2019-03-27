@@ -4,7 +4,7 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [packages]
-moto = {git = "https://github.com/spulec/moto.git",ref = "master"}
+moto = {git = "git://github.com/spulec/moto.git",ref = "64152f4"}
 flask = "*"
 cryptography = "*"
 
@@ -12,4 +12,5 @@ cryptography = "*"
 python_version = "3.6"
 
 [dev-packages]
+twine = "*"
 wheel = "*"

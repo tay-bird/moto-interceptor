@@ -1,15 +1,16 @@
 import os
-from pipenv.project import Project
-from pipenv.utils import convert_deps_to_pip
+#from pipenv.project import Project
+#from pipenv.utils import convert_deps_to_pip
 from setuptools import setup
 
 
-pipfile = Project(chdir=False).parsed_pipfile
-requirements = convert_deps_to_pip(pipfile['packages'], r=False)
+#pipfile = Project(chdir=False).parsed_pipfile
+#requirements = convert_deps_to_pip(pipfile['packages'], r=False)
 
 setup(
     name = "moto-interceptor",
-    install_requires = requirements,
+    dependency_links=["http://github.com/spulec/moto/tarball/64152f4#egg=moto"],
+    install_requires = ["cryptography", "flask", "moto"],
     packages = ["moto_interceptor"],
     scripts = ["bin/moto-interceptor"],
     version = "0.0.1",
