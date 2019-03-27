@@ -34,7 +34,7 @@ def _proxy(*args, **kwargs):
 
         resp = requests.request(
             method=request.method,
-            url=request.url.replace(request.host_url, 'http://localhost:' + str(proxy_port)),
+            url=request.url.replace(request.host_url, 'http://localhost:' + str(proxy_port) + '/'),
             headers={key: value for (key, value) in request.headers},
             data=request.get_data(),
             cookies=request.cookies,
@@ -57,5 +57,6 @@ def _proxy(*args, **kwargs):
             'method': request.method,
             'request_headers': request.headers,
             'message': resp.content,
-            'target': request.url.replace(request.host_url, 'http://localhost:' + str(proxy_port)),
+            'request': request.url,
+            'target': request.url.replace(request.host_url, 'http://localhost:' + str(proxy_port) + '/'),
             'status': resp.status_code})

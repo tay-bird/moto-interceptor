@@ -47,7 +47,6 @@ class Controller(object):
             self.target_services = target_services
         else:
             self.target_services = boto3.Session().get_available_services()
-        print(self.target_services)
 
     def start_all(self):
         self.start_interceptors()
